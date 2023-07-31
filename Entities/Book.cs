@@ -14,6 +14,6 @@ namespace WebApplication2.Entities
         public bool IsActive { get; set; }
         [Required]
         public DateTimeOffset CreateDate { get; set; } = DateTimeOffset.Now;
-        public List<Author> Authors { get; set; }=new List<Author>();
+        public List<AuthorBook> AuthorBooks { get; set; }=new List<AuthorBook>();
     }
 }

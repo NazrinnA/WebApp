@@ -12,8 +12,8 @@ using WebApplication2.DataAccess;
 namespace WebApplication2.Migrations
 {
     [DbContext(typeof(AppDb))]
-    [Migration("20230729195417_addAuthor1")]
-    partial class addAuthor1
+    [Migration("20230731105521_CreateDb")]
+    partial class CreateDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,7 +46,7 @@ namespace WebApplication2.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("WebApplication2.Entities.Book", b =>
+            modelBuilder.Entity("WebApplication2.Entities.AuthorBook", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -54,8 +54,28 @@ namespace WebApplication2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AuthorId")
+                    b.Property<int>("AuthorId")
                         .HasColumnType("int");
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("BookId");
+
+                    b.ToTable("AuthorBook");
+                });
+
+            modelBuilder.Entity("WebApplication2.Entities.Book", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset>("CreateDate")
                         .HasColumnType("datetimeoffset");
@@ -73,21 +93,36 @@ namespace WebApplication2.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
-
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("WebApplication2.Entities.Book", b =>
+            modelBuilder.Entity("WebApplication2.Entities.AuthorBook", b =>
                 {
-                    b.HasOne("WebApplication2.Entities.Author", null)
-                        .WithMany("Books")
-                        .HasForeignKey("AuthorId");
+                    b.HasOne("WebApplication2.Entities.Author", "Author")
+                        .WithMany("AuthorBooks")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication2.Entities.Book", "Book")
+                        .WithMany("AuthorBooks")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Book");
                 });
 
             modelBuilder.Entity("WebApplication2.Entities.Author", b =>
                 {
-                    b.Navigation("Books");
+                    b.Navigation("AuthorBooks");
+                });
+
+            modelBuilder.Entity("WebApplication2.Entities.Book", b =>
+                {
+                    b.Navigation("AuthorBooks");
                 });
 #pragma warning restore 612, 618
         }

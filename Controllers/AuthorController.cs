@@ -12,12 +12,12 @@ namespace WebApplication2.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthorsController : ControllerBase
+    public class AuthorController : ControllerBase
     {
         private readonly AppDb _db;
         private readonly IMapper _mapper;
 
-        public AuthorsController(AppDb db, IMapper mapper)
+        public AuthorController(AppDb db, IMapper mapper)
         {
             _db = db;
             _mapper = mapper;
@@ -54,13 +54,13 @@ namespace WebApplication2.Controllers
             await _db.SaveChangesAsync();
             return Ok();
         }
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var author = await _db.Authors.FindAsync(id);
-            _db.Remove(author);
-            await _db.SaveChangesAsync();
-            return Ok();
-        }
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var author = await _db.Authors.FindAsync(id);
+        //    _db.Remove(author);
+        //    await _db.SaveChangesAsync();
+        //    return Ok();
+        //}
     }
 }

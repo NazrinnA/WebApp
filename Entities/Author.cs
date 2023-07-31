@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication2.Entities
 {
@@ -10,6 +11,6 @@ namespace WebApplication2.Entities
         public string Name { get; set; }
         [Required]
         public string Surname { get; set; }
-        public List<Book>? Books{ get; set; }=new List<Book>();
+        public List<AuthorBook> AuthorBooks { get; set; }=new List<AuthorBook>();
     }
 }
