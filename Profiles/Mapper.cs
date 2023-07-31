@@ -11,6 +11,7 @@ public class Mapper:Profile
             CreateMap<AuthorCreateDto, Author>();
             CreateMap<AuthorUpdateDto, Author>();
             CreateMap<BookCreateDto, Book>();
+            CreateMap<BookUpdateDto, Book>();
         }
     }
 

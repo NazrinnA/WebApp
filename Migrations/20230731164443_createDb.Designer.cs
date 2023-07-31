@@ -12,8 +12,8 @@ using WebApplication2.DataAccess;
 namespace WebApplication2.Migrations
 {
     [DbContext(typeof(AppDb))]
-    [Migration("20230731105521_CreateDb")]
-    partial class CreateDb
+    [Migration("20230731164443_createDb")]
+    partial class createDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

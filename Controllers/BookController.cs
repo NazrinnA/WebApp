@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using System.Net;
 using System.Net.Mime;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using WebApplication2.DataAccess;
 using WebApplication2.DTO.Book;
 using WebApplication2.Entities;
@@ -49,20 +52,7 @@ namespace WebApplication2.Controllers
             }
             return BadRequest();
         }
-        [HttpGet]
-        [Route("authorBooks/id")]
-        public async Task<IActionResult> GetAuthor(int id)
-        {
-            var authorbook = _db.AuthorBook.Where(a => a.AuthorId == id);
-            if(authorbook == null) return NotFound();
-            var books = new List<Book>();
-            foreach (var item in authorbook)
-            {
-                var book =await  _db.Books.Where(b => b.Id == item.BookId).FirstOrDefaultAsync();
-                if (book is not null) books.Add(book);
-            }
-            return Ok(books);
-        }
+       
         [HttpPost]
         public async Task<IActionResult> CreateBook(BookCreateDto book)
         {
@@ -70,7 +60,7 @@ namespace WebApplication2.Controllers
             newBook = _mapper.Map<Book>(book);
             foreach (var item in book.AuthorsId)
             {
-                var aut = await _db.Authors.Where(a => a.Id == item).FirstOrDefaultAsync();
+                var aut =  _db.Authors.Where(a => a.Id == item).First();
                 if (aut is not null)
                 {
                     AuthorBook authorBook = new AuthorBook
@@ -98,5 +88,16 @@ namespace WebApplication2.Controllers
             return Ok();
         }
 
+        [HttpPut]
+        [Route("/id")]
+        public async Task<IActionResult> Update(int id,BookUpdateDto updateDto)
+        {
+            var book = await _db.Books.Where(b => b.Id == id && b.IsActive).FirstOrDefaultAsync();
+            if(book is null) return NotFound();
+            book.Price = updateDto.Price;
+            book.IsActive = updateDto.IsActive;
+            return Ok(book);
+
+        }
     }
 }

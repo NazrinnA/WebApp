@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Net;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using WebApplication2.DataAccess;
 using WebApplication2.DTO.Author;
 using WebApplication2.Entities;
@@ -36,6 +38,32 @@ namespace WebApplication2.Controllers
             if (author == null) return NotFound();
             return StatusCode((int)HttpStatusCode.OK, author);
         }
+        [HttpGet]
+        [Route("authorBooks/id")]
+        public IActionResult GetAuthor(int id)
+        {
+            var authorBooks = _db.AuthorBook.Where(a => a.AuthorId == id).ToList();
+            if (authorBooks.Count == 0)
+            {
+                return NotFound();
+            }
+
+            var bookIds = authorBooks.Select(ab => ab.BookId).ToList();
+            var books = _db.Books.Where(b => bookIds.Contains(b.Id)).ToList();
+            // Fix the JSON serialization with ReferenceHandler.Preserve
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve,
+                // You can set other options if needed, e.g., PropertyNameCaseInsensitive = true
+            };
+
+            // Serialize the books to JSON using JsonSerializer
+            string json = JsonSerializer.Serialize(books, options);
+
+            // Return the JSON as an Ok response
+            return Ok(json);
+
+        }
         [HttpPost]
         public async Task<IActionResult> CreateAuthor(AuthorCreateDto author)
         {
@@ -54,13 +82,5 @@ namespace WebApplication2.Controllers
             await _db.SaveChangesAsync();
             return Ok();
         }
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    var author = await _db.Authors.FindAsync(id);
-        //    _db.Remove(author);
-        //    await _db.SaveChangesAsync();
-        //    return Ok();
-        //}
     }
 }
