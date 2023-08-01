@@ -18,7 +18,6 @@ namespace WebApplication2.Controllers
     {
         private readonly AppDb _db;
         private readonly IMapper _mapper;
-
         public AuthorController(AppDb db, IMapper mapper)
         {
             _db = db;
@@ -50,19 +49,8 @@ namespace WebApplication2.Controllers
 
             var bookIds = authorBooks.Select(ab => ab.BookId).ToList();
             var books = _db.Books.Where(b => bookIds.Contains(b.Id)).ToList();
-            // Fix the JSON serialization with ReferenceHandler.Preserve
-            var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve,
-                // You can set other options if needed, e.g., PropertyNameCaseInsensitive = true
-            };
 
-            // Serialize the books to JSON using JsonSerializer
-            string json = JsonSerializer.Serialize(books, options);
-
-            // Return the JSON as an Ok response
-            return Ok(json);
-
+            return StatusCode((int)HttpStatusCode.OK, books);
         }
         [HttpPost]
         public async Task<IActionResult> CreateAuthor(AuthorCreateDto author)
@@ -76,6 +64,7 @@ namespace WebApplication2.Controllers
         public async Task<IActionResult> UpdateAuthor(int id, AuthorUpdateDto updateDto)
         {
             var author = await _db.Authors.FindAsync(id);
+            if (author is null) return NotFound();
             author.Name = updateDto.Name;
             author.Surname = updateDto.Surname;
             _db.Update(author);

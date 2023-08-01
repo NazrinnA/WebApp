@@ -52,7 +52,7 @@ namespace WebApplication2.Controllers
             }
             return BadRequest();
         }
-       
+
         [HttpPost]
         public async Task<IActionResult> CreateBook(BookCreateDto book)
         {
@@ -60,7 +60,7 @@ namespace WebApplication2.Controllers
             newBook = _mapper.Map<Book>(book);
             foreach (var item in book.AuthorsId)
             {
-                var aut =  _db.Authors.Where(a => a.Id == item).First();
+                var aut = _db.Authors.Where(a => a.Id == item).First();
                 if (aut is not null)
                 {
                     AuthorBook authorBook = new AuthorBook
@@ -69,7 +69,7 @@ namespace WebApplication2.Controllers
                         Book = newBook
                     };
                     newBook.AuthorBooks.Add(authorBook);
-                    aut.AuthorBooks.Add(authorBook); 
+                    aut.AuthorBooks.Add(authorBook);
                     _db.AuthorBook.Add(authorBook);
                 }
             };
@@ -87,17 +87,30 @@ namespace WebApplication2.Controllers
             await _db.SaveChangesAsync();
             return Ok();
         }
-
         [HttpPut]
         [Route("/id")]
-        public async Task<IActionResult> Update(int id,BookUpdateDto updateDto)
+        public async Task<IActionResult> Update(int id, BookUpdateDto updateDto)
         {
-            var book = await _db.Books.Where(b => b.Id == id && b.IsActive).FirstOrDefaultAsync();
-            if(book is null) return NotFound();
+            var book = _db.Books.Include("AuthorBooks").Where(b => b.Id == id).FirstOrDefault();
+            if (book is null) return NotFound();
+            if (updateDto.AuthorsId.Count == 0) return BadRequest();
             book.Price = updateDto.Price;
             book.IsActive = updateDto.IsActive;
-            return Ok(book);
-
+            book.AuthorBooks.Clear();
+            foreach (var item in updateDto.AuthorsId)
+            {
+                var aut = _db.Authors.Find(item);
+                if (aut is null) return NotFound();
+                AuthorBook autb = new AuthorBook
+                {
+                    Author = aut,
+                    Book = book
+                };
+                _db.AuthorBook.Add(autb);
+            }
+            _db.Books.Update(book);
+            await _db.SaveChangesAsync();
+            return Ok();
         }
     }
 }
