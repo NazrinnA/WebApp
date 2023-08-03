@@ -9,6 +9,7 @@ using System.Text.Json;
 using WebApplication2.DataAccess;
 using WebApplication2.DTO.Author;
 using WebApplication2.Entities;
+using WebApplication2.Repository.Interfaces;
 
 namespace WebApplication2.Controllers
 {
@@ -16,59 +17,39 @@ namespace WebApplication2.Controllers
     [ApiController]
     public class AuthorController : ControllerBase
     {
-        private readonly AppDb _db;
         private readonly IMapper _mapper;
-        public AuthorController(AppDb db, IMapper mapper)
+        private readonly IAuthorRepository _repo;
+        public AuthorController(IMapper mapper, IAuthorRepository repo)
         {
-            _db = db;
             _mapper = mapper;
+            _repo = repo;
         }
         [HttpGet]
         public async Task<IActionResult> GetAuthors()
         {
-            List<Author> authors = await _db.Authors.ToListAsync();
-            if (authors.Count == 0) return NotFound();
+            List<Author> authors = await _repo.GetAll();
             return StatusCode((int)HttpStatusCode.OK, authors);
         }
         [HttpGet("{id}")]
-        public IActionResult GetBook(int id)
+        public async Task<IActionResult> GetAuthor(int id)
         {
-            var author = _db.Authors.Where(b => b.Id == id).FirstOrDefault();
-            if (author == null) return NotFound();
+            var author = await _repo.Get(b => b.Id == id);
             return StatusCode((int)HttpStatusCode.OK, author);
-        }
-        [HttpGet]
-        [Route("authorBooks/id")]
-        public IActionResult GetAuthor(int id)
-        {
-            var authorBooks = _db.AuthorBook.Where(a => a.AuthorId == id).ToList();
-            if (authorBooks.Count == 0)
-            {
-                return NotFound();
-            }
-
-            var bookIds = authorBooks.Select(ab => ab.BookId).ToList();
-            var books = _db.Books.Where(b => bookIds.Contains(b.Id)).ToList();
-
-            return StatusCode((int)HttpStatusCode.OK, books);
         }
         [HttpPost]
         public async Task<IActionResult> CreateAuthor(AuthorCreateDto author)
         {
             Author nauthor = _mapper.Map<Author>(author);
-            _db.Add(nauthor);
-            await _db.SaveChangesAsync();
+            await _repo.Create(nauthor);
             return Ok();
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuthor(int id, AuthorUpdateDto updateDto)
         {
-            var author = await _db.Authors.FindAsync(id);
-            if (author is null) return NotFound();
+            var author = await _repo.Get(b => b.Id == id);
             author.Name = updateDto.Name;
             author.Surname = updateDto.Surname;
-            _db.Update(author);
-            await _db.SaveChangesAsync();
+            await _repo.Update(author);
             return Ok();
         }
     }

@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using WebApplication2.DataAccess;
+using WebApplication2.Repository.Implementations;
+using WebApplication2.Repository.Interfaces;
 
 namespace WebApplication2
 {
@@ -23,6 +25,9 @@ namespace WebApplication2
                 op.UseSqlServer(builder.Configuration.GetConnectionString("default"));
             });
             builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            builder.Services.AddScoped<IBookRepository, BookRepository>();
+            builder.Services.AddScoped<IAuthorBookRepository, AuthorBookRepository>();
+            builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

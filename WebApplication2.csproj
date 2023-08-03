@@ -7,17 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Repository\Новая папка1\**" />
-    <Compile Remove="Repository\Новая папка\**" />
-    <Content Remove="Repository\Новая папка1\**" />
-    <Content Remove="Repository\Новая папка\**" />
-    <EmbeddedResource Remove="Repository\Новая папка1\**" />
-    <EmbeddedResource Remove="Repository\Новая папка\**" />
-    <None Remove="Repository\Новая папка1\**" />
-    <None Remove="Repository\Новая папка\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />

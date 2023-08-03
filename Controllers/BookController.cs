@@ -12,6 +12,7 @@ using System.Text.Json;
 using WebApplication2.DataAccess;
 using WebApplication2.DTO.Book;
 using WebApplication2.Entities;
+using WebApplication2.Repository.Interfaces;
 
 namespace WebApplication2.Controllers
 {
@@ -21,18 +22,21 @@ namespace WebApplication2.Controllers
     [Route("api/[controller]")]
     public class BookController : ControllerBase
     {
-        private readonly AppDb _db;
         private readonly IMapper _mapper;
-        public BookController(AppDb db, IMapper mapper)
+        private readonly IBookRepository _repo;
+        private readonly IAuthorRepository _aut;
+        private readonly IAuthorBookRepository _autbook;
+        public BookController(IMapper mapper, IBookRepository repo, IAuthorRepository aut, IAuthorBookRepository autbook)
         {
-            _db = db;
             _mapper = mapper;
+            _repo = repo;
+            _aut = aut;
+            _autbook = autbook;
         }
         [HttpGet]
         public async Task<IActionResult> GetBooks()
         {
-            List<Book> books = await _db.Books.Where(b => b.IsActive).ToListAsync();
-            if (books.Count == 0) return NotFound();
+            List<Book> books = await _repo.GetAll();
             return StatusCode((int)HttpStatusCode.OK, books);
         }
         [HttpGet]
@@ -41,14 +45,11 @@ namespace WebApplication2.Controllers
         {
             try
             {
-                var book = _db.Books.Where(b => b.Id == id && b.IsActive).FirstOrDefault();
-                if (book == null) return NotFound();
+                var book = await _repo.Get(b=>b.Id==id);
                 return Ok(book);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
-
             }
             return BadRequest();
         }
@@ -60,7 +61,7 @@ namespace WebApplication2.Controllers
             newBook = _mapper.Map<Book>(book);
             foreach (var item in book.AuthorsId)
             {
-                var aut = _db.Authors.Where(a => a.Id == item).First();
+                var aut = await _aut.Get(a => a.Id == item);
                 if (aut is not null)
                 {
                     AuthorBook authorBook = new AuthorBook
@@ -68,49 +69,37 @@ namespace WebApplication2.Controllers
                         Author = aut,
                         Book = newBook
                     };
-                    newBook.AuthorBooks.Add(authorBook);
-                    aut.AuthorBooks.Add(authorBook);
-                    _db.AuthorBook.Add(authorBook);
+                    await _autbook.Create(authorBook);
                 }
             };
-            await _db.AddAsync(newBook);
-            await _db.SaveChangesAsync();
-            return Ok();
+            await _repo.Create(newBook);
+            return Ok(newBook);
         }
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            var book = await _db.Books.Where(b => b.Id == id && b.IsActive).FirstOrDefaultAsync();
-            if (book is null) return NotFound();
-            book.IsActive = false;
-            _db.Books.Update(book);
-            await _db.SaveChangesAsync();
+            await _repo.Delete(id);
             return Ok();
         }
         [HttpPut]
         [Route("/id")]
         public async Task<IActionResult> Update(int id, BookUpdateDto updateDto)
         {
-            var book = _db.Books.Include("AuthorBooks").Where(b => b.Id == id).FirstOrDefault();
-            if (book is null) return NotFound();
-            if (updateDto.AuthorsId.Count == 0) return BadRequest();
-            book.Price = updateDto.Price;
-            book.IsActive = updateDto.IsActive;
-            book.AuthorBooks.Clear();
-            foreach (var item in updateDto.AuthorsId)
-            {
-                var aut = _db.Authors.Find(item);
-                if (aut is null) return NotFound();
-                AuthorBook autb = new AuthorBook
-                {
-                    Author = aut,
-                    Book = book
-                };
-                _db.AuthorBook.Add(autb);
-            }
-            _db.Books.Update(book);
-            await _db.SaveChangesAsync();
+            await _repo.UpdateBook(id, updateDto);
             return Ok();
+        }
+        [HttpGet]
+        [Route("AuthorBooks/{id}")]
+        public async Task<IActionResult> GetBookByAuthorId(int id)
+        {
+            var authorBooks = await _autbook.GetAll(a => a.AuthorId == id);
+            if (authorBooks.Count == 0)
+            {
+                return NotFound();
+            }
+            var bookIds = authorBooks.Select(ab => ab.BookId).ToList();
+            var books = await _repo.GetAll(b => bookIds.Contains(b.Id));
+            return StatusCode((int)HttpStatusCode.OK, books);
         }
     }
 }
